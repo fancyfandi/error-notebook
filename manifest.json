@@ -2,7 +2,7 @@
   "name": "中考错题本",
   "short_name": "错题本",
   "description": "专为中考生设计的电子错题本",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#F5F5F5",
   "theme_color": "#4A90D9",
