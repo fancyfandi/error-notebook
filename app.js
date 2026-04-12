@@ -451,22 +451,71 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // 图片上传
-  const imageUpload = document.getElementById('image-upload');
-  const imageInput = document.getElementById('image-input');
-
-  imageUpload.addEventListener('click', () => imageInput.click());
-  imageInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
+  // 图片上传处理函数
+  function handleImageSelect(file) {
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
       uploadedImage = event.target.result;
-      imageUpload.classList.add('has-image');
-      imageUpload.innerHTML = `<img src="${uploadedImage}" alt="题目">`;
+      const previewArea = document.getElementById('image-preview-area');
+      previewArea.innerHTML = `
+        <div class="image-upload has-image">
+          <img src="${uploadedImage}" alt="题目" style="max-width: 100%; border-radius: 8px;">
+          <button type="button" id="btn-reselect" style="margin-top: 12px; padding: 8px 16px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">重新选择</button>
+        </div>
+      `;
+      // 重新选择按钮事件
+      setTimeout(() => {
+        document.getElementById('btn-reselect')?.addEventListener('click', resetImageUpload);
+      }, 0);
     };
     reader.readAsDataURL(file);
+  }
+
+  // 重置图片上传区域
+  function resetImageUpload() {
+    uploadedImage = null;
+    const previewArea = document.getElementById('image-preview-area');
+    previewArea.innerHTML = `
+      <div class="image-upload" id="image-upload">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="#999" style="margin-bottom: 8px;">
+          <path d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
+        </svg>
+        <p style="color: #999; margin-bottom: 12px;">选择图片来源</p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+          <button type="button" id="btn-camera" style="padding: 8px 16px; background: #4A90D9; color: white; border: none; border-radius: 6px; font-size: 14px;">
+            📷 拍照
+          </button>
+          <button type="button" id="btn-gallery" style="padding: 8px 16px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;">
+            🖼️ 相册
+          </button>
+        </div>
+      </div>
+    `;
+    bindImageButtons();
+  }
+
+  // 绑定图片按钮事件
+  function bindImageButtons() {
+    document.getElementById('btn-camera')?.addEventListener('click', () => {
+      document.getElementById('camera-input').click();
+    });
+    document.getElementById('btn-gallery')?.addEventListener('click', () => {
+      document.getElementById('gallery-input').click();
+    });
+  }
+
+  // 初始化绑定
+  bindImageButtons();
+
+  // 相机输入
+  document.getElementById('camera-input').addEventListener('change', (e) => {
+    handleImageSelect(e.target.files[0]);
+  });
+
+  // 相册输入
+  document.getElementById('gallery-input').addEventListener('change', (e) => {
+    handleImageSelect(e.target.files[0]);
   });
 
   // 错误类型标签
@@ -503,17 +552,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('chapter').value = '';
     document.getElementById('description').value = '';
     document.getElementById('answer').value = '';
-    imageUpload.classList.remove('has-image');
-    imageUpload.innerHTML = `
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="#999" style="margin-bottom: 8px;">
-        <path d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
-      </svg>
-      <p style="color: #999;">点击拍照或上传图片</p>
-      <input type="file" accept="image/*" capture="environment" id="image-input" style="display: none;">
-    `;
-    document.getElementById('image-input').addEventListener('change', imageInput.onchange);
+    resetImageUpload();
     document.querySelectorAll('#error-types .tag').forEach(t => t.classList.remove('selected'));
-    uploadedImage = null;
 
     alert('保存成功！');
     switchPage('home');
