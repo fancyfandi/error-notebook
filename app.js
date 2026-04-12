@@ -578,6 +578,159 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  // PDF导出功能
+  let pdfSubjectFilter = 'all';
+  document.querySelectorAll('#pdf-subject-filter .filter-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('#pdf-subject-filter .filter-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      pdfSubjectFilter = item.dataset.subject;
+    });
+  });
+
+  document.getElementById('btn-export-pdf').addEventListener('click', async () => {
+    const previewArea = document.getElementById('pdf-preview-area');
+    previewArea.style.display = 'block';
+    previewArea.innerHTML = '<p style="color: #666; font-size: 13px; margin-top: 8px;">正在生成PDF...</p>';
+
+    try {
+      // 获取错题数据
+      let errors;
+      if (pdfSubjectFilter === 'all') {
+        errors = await getAllErrors();
+      } else {
+        errors = await getErrorsBySubject(pdfSubjectFilter);
+      }
+
+      if (errors.length === 0) {
+        alert('该学科暂时没有错题');
+        previewArea.style.display = 'none';
+        return;
+      }
+
+      // 生成PDF
+      await generatePDF(errors, pdfSubjectFilter);
+      previewArea.innerHTML = '<p style="color: #52C41A; font-size: 13px; margin-top: 8px;">PDF生成成功！</p>';
+      setTimeout(() => previewArea.style.display = 'none', 3000);
+    } catch (err) {
+      console.error(err);
+      previewArea.innerHTML = `<p style="color: #ff4d4f; font-size: 13px; margin-top: 8px;">生成失败：${err.message}</p>`;
+    }
+  });
+
   // 加载首页数据
   loadHome();
 });
+
+// 生成PDF函数
+async function generatePDF(errors, subjectFilter) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({
+    orientation: 'p',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const subjectNames = {
+    math: '数学', chinese: '语文', english: '英语',
+    physics: '物理', chemistry: '化学', biology: '生物',
+    history: '历史', geography: '地理', politics: '政治',
+    all: '全部学科'
+  };
+
+  // 标题
+  doc.setFontSize(20);
+  doc.text('中考错题本', 105, 20, { align: 'center' });
+
+  doc.setFontSize(14);
+  doc.text(`${subjectNames[subjectFilter] || subjectFilter} - 共${errors.length}道错题`, 105, 30, { align: 'center' });
+
+  doc.setFontSize(10);
+  doc.text(`导出时间：${new Date().toLocaleString()}`, 105, 38, { align: 'center' });
+
+  let yPos = 50;
+  const pageHeight = 280;
+
+  for (let i = 0; i < errors.length; i++) {
+    const error = errors[i];
+
+    // 检查是否需要新页面
+    if (yPos > pageHeight - 40) {
+      doc.addPage();
+      yPos = 20;
+    }
+
+    // 错题序号和学科
+    doc.setFontSize(12);
+    doc.setTextColor(74, 144, 217);
+    doc.text(`第 ${i + 1} 题 [${subjectNames[error.subject] || error.subject}]`, 20, yPos);
+    yPos += 8;
+
+    // 知识点
+    if (error.chapter) {
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`知识点：${error.chapter}`, 20, yPos);
+      yPos += 6;
+    }
+
+    // 题目描述
+    if (error.description) {
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      const descLines = doc.splitTextToSize(`题目：${error.description}`, 170);
+      doc.text(descLines, 20, yPos);
+      yPos += descLines.length * 5 + 3;
+    }
+
+    // 图片
+    if (error.image) {
+      try {
+        // 计算图片尺寸，最大宽度170mm
+        const imgWidth = 80;
+        const imgHeight = 60;
+
+        if (yPos + imgHeight > pageHeight) {
+          doc.addPage();
+          yPos = 20;
+        }
+
+        doc.addImage(error.image, 'JPEG', 20, yPos, imgWidth, imgHeight);
+        yPos += imgHeight + 5;
+      } catch (e) {
+        console.log('图片添加失败', e);
+      }
+    }
+
+    // 答案
+    if (error.answer) {
+      doc.setFontSize(10);
+      doc.setTextColor(82, 196, 26);
+      const answerLines = doc.splitTextToSize(`答案：${error.answer}`, 170);
+      doc.text(answerLines, 20, yPos);
+      yPos += answerLines.length * 5 + 3;
+    }
+
+    // 错误类型
+    const typeNames = {
+      concept: '概念不清', careless: '粗心大意', method: '方法不会',
+      calculation: '计算错误', understand: '题意理解'
+    };
+    if (error.errorType) {
+      doc.setFontSize(9);
+      doc.setTextColor(250, 173, 20);
+      doc.text(`错误类型：${typeNames[error.errorType] || error.errorType}`, 20, yPos);
+      yPos += 5;
+    }
+
+    // 分隔线
+    yPos += 3;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, yPos, 190, yPos);
+    yPos += 10;
+  }
+
+  // 保存PDF
+  const fileName = `错题本_${subjectNames[subjectFilter] || subjectFilter}_${new Date().toLocaleDateString()}.pdf`;
+  doc.save(fileName);
+}

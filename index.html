@@ -597,9 +597,28 @@
     <!-- 我的页面 -->
     <div class="page" id="page-profile">
         <div class="card">
+            <h3 style="margin-bottom: 16px;">导出PDF</h3>
+            <p style="color: #666; font-size: 13px; margin-bottom: 12px;">按学科导出错题为PDF文件，方便打印复习</p>
+            <div class="filter-bar" id="pdf-subject-filter" style="margin-bottom: 12px;">
+                <div class="filter-item active" data-subject="all">全部学科</div>
+                <div class="filter-item" data-subject="math">数学</div>
+                <div class="filter-item" data-subject="chinese">语文</div>
+                <div class="filter-item" data-subject="english">英语</div>
+                <div class="filter-item" data-subject="physics">物理</div>
+                <div class="filter-item" data-subject="chemistry">化学</div>
+            </div>
+            <button class="btn btn-primary btn-block" id="btn-export-pdf" style="margin-bottom: 12px;">
+                导出PDF
+            </button>
+            <div id="pdf-preview-area" style="display: none;">
+                <p style="color: #666; font-size: 13px; margin-top: 8px;">正在生成PDF...</p>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px;">
             <h3 style="margin-bottom: 16px;">数据管理</h3>
-            <button class="btn btn-primary btn-block" id="btn-export" style="margin-bottom: 12px;">
-                导出错题数据
+            <button class="btn btn-primary btn-block" id="btn-export" style="margin-bottom: 12px; background: #52C41A;">
+                备份数据(JSON)
             </button>
             <button class="btn btn-block" id="btn-import" style="background: #f5f5f5; color: #333;">
                 导入数据
@@ -648,6 +667,7 @@
         </div>
     </nav>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
