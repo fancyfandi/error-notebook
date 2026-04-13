@@ -622,115 +622,122 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadHome();
 });
 
-// 生成PDF函数
+// 生成PDF函数 - 使用html2canvas解决中文乱码
 async function generatePDF(errors, subjectFilter) {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({
-    orientation: 'p',
-    unit: 'mm',
-    format: 'a4'
-  });
-
   const subjectNames = {
     math: '数学', chinese: '语文', english: '英语',
     physics: '物理', chemistry: '化学', biology: '生物',
     history: '历史', geography: '地理', politics: '政治',
     all: '全部学科'
   };
+  const typeNames = {
+    concept: '概念不清', careless: '粗心大意', method: '方法不会',
+    calculation: '计算错误', understand: '题意理解'
+  };
 
-  // 标题
-  doc.setFontSize(20);
-  doc.text('中考错题本', 105, 20, { align: 'center' });
+  // 创建临时容器渲染PDF内容
+  const container = document.createElement('div');
+  container.style.cssText = `
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;
+    background: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+    box-sizing: border-box;
+  `;
 
-  doc.setFontSize(14);
-  doc.text(`${subjectNames[subjectFilter] || subjectFilter} - 共${errors.length}道错题`, 105, 30, { align: 'center' });
+  // 生成HTML内容
+  let html = `
+    <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #4A90D9; padding-bottom: 20px;">
+      <h1 style="font-size: 28px; color: #4A90D9; margin: 0 0 10px 0;">中考错题本</h1>
+      <p style="font-size: 16px; color: #666; margin: 5px 0;">${subjectNames[subjectFilter] || subjectFilter} - 共${errors.length}道错题</p>
+      <p style="font-size: 12px; color: #999; margin: 5px 0;">导出时间：${new Date().toLocaleString()}</p>
+    </div>
+  `;
 
-  doc.setFontSize(10);
-  doc.text(`导出时间：${new Date().toLocaleString()}`, 105, 38, { align: 'center' });
+  errors.forEach((error, index) => {
+    html += `
+      <div style="margin-bottom: 30px; page-break-inside: avoid;">
+        <div style="background: #f0f7ff; padding: 10px 15px; border-radius: 8px 8px 0 0; border-left: 4px solid #4A90D9;">
+          <strong style="color: #4A90D9; font-size: 16px;">第 ${index + 1} 题</strong>
+          <span style="background: #4A90D9; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px;">${subjectNames[error.subject] || error.subject}</span>
+          ${error.chapter ? `<span style="color: #666; font-size: 12px; margin-left: 10px;">${error.chapter}</span>` : ''}
+        </div>
+        <div style="background: #fafafa; padding: 15px; border-radius: 0 0 8px 8px;">
+          ${error.description ? `<div style="margin-bottom: 10px;"><strong>题目：</strong>${error.description}</div>` : ''}
+          ${error.image ? `<div style="margin: 10px 0;"><img src="${error.image}" style="max-width: 100%; max-height: 200px; border-radius: 4px;"></div>` : ''}
+          ${error.answer ? `<div style="background: #f6ffed; padding: 10px; border-radius: 4px; margin: 10px 0;"><strong style="color: #52C41A;">答案：</strong>${error.answer}</div>` : ''}
+          ${error.errorType ? `<div style="color: #FAAD14; font-size: 12px; margin-top: 8px;">错误类型：${typeNames[error.errorType] || error.errorType}</div>` : ''}
+        </div>
+      </div>
+    `;
+  });
 
-  let yPos = 50;
-  const pageHeight = 280;
+  container.innerHTML = html;
+  document.body.appendChild(container);
 
-  for (let i = 0; i < errors.length; i++) {
-    const error = errors[i];
+  try {
+    // 使用html2canvas将HTML转为图片
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff'
+    });
 
-    // 检查是否需要新页面
-    if (yPos > pageHeight - 40) {
-      doc.addPage();
-      yPos = 20;
-    }
+    // 创建PDF
+    const imgData = canvas.toDataURL('image/png');
+    const doc = new jsPDF({
+      orientation: 'p',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-    // 错题序号和学科
-    doc.setFontSize(12);
-    doc.setTextColor(74, 144, 217);
-    doc.text(`第 ${i + 1} 题 [${subjectNames[error.subject] || error.subject}]`, 20, yPos);
-    yPos += 8;
+    const pdfWidth = 210;
+    const pdfHeight = 297;
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
 
-    // 知识点
-    if (error.chapter) {
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`知识点：${error.chapter}`, 20, yPos);
-      yPos += 6;
-    }
+    const imgX = 0;
+    let imgY = 0;
+    let remainingHeight = imgHeight;
+    let position = 0;
 
-    // 题目描述
-    if (error.description) {
-      doc.setFontSize(10);
-      doc.setTextColor(0, 0, 0);
-      const descLines = doc.splitTextToSize(`题目：${error.description}`, 170);
-      doc.text(descLines, 20, yPos);
-      yPos += descLines.length * 5 + 3;
-    }
+    // 如果内容超过一页，分页处理
+    while (remainingHeight > 0) {
+      const currentHeight = Math.min(remainingHeight, imgHeight * (pdfHeight / (imgHeight * ratio)));
 
-    // 图片
-    if (error.image) {
-      try {
-        // 计算图片尺寸，最大宽度170mm
-        const imgWidth = 80;
-        const imgHeight = 60;
+      doc.addImage(
+        imgData,
+        'PNG',
+        imgX,
+        imgY - position,
+        imgWidth * ratio,
+        imgHeight * ratio
+      );
 
-        if (yPos + imgHeight > pageHeight) {
-          doc.addPage();
-          yPos = 20;
-        }
+      remainingHeight -= currentHeight;
+      position += pdfHeight;
 
-        doc.addImage(error.image, 'JPEG', 20, yPos, imgWidth, imgHeight);
-        yPos += imgHeight + 5;
-      } catch (e) {
-        console.log('图片添加失败', e);
+      if (remainingHeight > 0) {
+        doc.addPage();
       }
     }
 
-    // 答案
-    if (error.answer) {
-      doc.setFontSize(10);
-      doc.setTextColor(82, 196, 26);
-      const answerLines = doc.splitTextToSize(`答案：${error.answer}`, 170);
-      doc.text(answerLines, 20, yPos);
-      yPos += answerLines.length * 5 + 3;
-    }
+    // 保存PDF
+    const fileName = `错题本_${subjectNames[subjectFilter] || subjectFilter}_${new Date().toLocaleDateString()}.pdf`;
+    doc.save(fileName);
 
-    // 错误类型
-    const typeNames = {
-      concept: '概念不清', careless: '粗心大意', method: '方法不会',
-      calculation: '计算错误', understand: '题意理解'
-    };
-    if (error.errorType) {
-      doc.setFontSize(9);
-      doc.setTextColor(250, 173, 20);
-      doc.text(`错误类型：${typeNames[error.errorType] || error.errorType}`, 20, yPos);
-      yPos += 5;
-    }
-
-    // 分隔线
-    yPos += 3;
-    doc.setDrawColor(200, 200, 200);
-    doc.line(20, yPos, 190, yPos);
-    yPos += 10;
+  } finally {
+    // 清理临时容器
+    document.body.removeChild(container);
   }
-
-  // 保存PDF
-  const fileName = `错题本_${subjectNames[subjectFilter] || subjectFilter}_${new Date().toLocaleDateString()}.pdf`;
-  doc.save(fileName);
 }
