@@ -422,7 +422,29 @@ async function handleReview(result) {
 
 // ==================== 事件绑定 ====================
 
-document.addEventListener('DOMContentLoaded', async () => {
+// 邀请码列表
+const INVITE_CODES = ["275425", "797183", "259246", "787065", "171244", "567774", "959024", "660744", "797123", "768113"];
+
+// 检查是否已经验证过邀请码
+function checkInviteCode() {
+  const verified = localStorage.getItem("inviteCodeVerified");
+  if (verified === "true") {
+    document.getElementById("invite-code-overlay").style.display = "none";
+    return true;
+  }
+  return false;
+}
+
+// 验证邀请码
+function verifyInviteCode(code) {
+  if (INVITE_CODES.includes(code)) {
+    localStorage.setItem("inviteCodeVerified", "true");
+    localStorage.setItem("inviteCodeUsed", code);
+    document.getElementById("invite-code-overlay").style.display = "none";
+    return true;
+  }
+  return false;
+}document.addEventListener('DOMContentLoaded', async () => {
   // 初始化数据库
   db = await openDB();
 
@@ -619,7 +641,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 加载首页数据
-  loadHome();
+  // 邀请码验证
+  if (!checkInviteCode()) {
+    const verifyBtn = document.getElementById("verify-code-btn");
+    const codeInput = document.getElementById("invite-code-input");
+    const errorMsg = document.getElementById("invite-error");
+    
+    verifyBtn.addEventListener("click", () => {
+      const code = codeInput.value.trim();
+      if (verifyInviteCode(code)) {
+        errorMsg.style.display = "none";
+      } else {
+        errorMsg.style.display = "block";
+        codeInput.value = "";
+      }
+    });
+    
+    codeInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        verifyBtn.click();
+      }
+    });
+  }  loadHome();
 });
 
 // 生成PDF函数 - 使用html2canvas解决中文乱码

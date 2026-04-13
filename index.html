@@ -456,7 +456,19 @@
     </style>
 </head>
 <body>
-    <!-- 头部 -->
+    <!-- 邀请码验证层 -->
+    <div id="invite-code-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #4A90D9, #357ABD); z-index: 10000; display: flex; align-items: center; justify-content: center;" id="invite-overlay">
+        <div style="background: white; padding: 40px; border-radius: 16px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="#4A90D9" style="margin-bottom: 20px;">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+            </svg>
+            <h2 style="color: #333; margin-bottom: 8px; font-size: 24px;">中考错题本</h2>
+            <p style="color: #666; margin-bottom: 24px; font-size: 14px;">请输入邀请码继续使用</p>
+            <input type="text" id="invite-code-input" placeholder="请输入6位邀请码" maxlength="6" style="width: 100%; padding: 16px; font-size: 18px; text-align: center; letter-spacing: 8px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 16px; outline: none;">
+            <button id="verify-code-btn" style="width: 100%; padding: 16px; background: #4A90D9; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">验证邀请码</button>
+            <p id="invite-error" style="color: #ff4d4f; font-size: 14px; margin-top: 12px; display: none;">邀请码错误，请重试</p>
+        </div>
+    </div>    <!-- 头部 -->
     <header class="header">
         <h1>中考错题本</h1>
     </header>
