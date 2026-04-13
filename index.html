@@ -599,13 +599,17 @@
         <div class="card">
             <h3 style="margin-bottom: 16px;">导出PDF</h3>
             <p style="color: #666; font-size: 13px; margin-bottom: 12px;">按学科导出错题为PDF文件，方便打印复习</p>
-            <div class="filter-bar" id="pdf-subject-filter" style="margin-bottom: 12px;">
-                <div class="filter-item active" data-subject="all">全部学科</div>
+            <div class="filter-bar" id="pdf-subject-filter" style="margin-bottom: 12px; flex-wrap: wrap;">
+                <div class="filter-item active" data-subject="all">全部</div>
                 <div class="filter-item" data-subject="math">数学</div>
                 <div class="filter-item" data-subject="chinese">语文</div>
                 <div class="filter-item" data-subject="english">英语</div>
                 <div class="filter-item" data-subject="physics">物理</div>
                 <div class="filter-item" data-subject="chemistry">化学</div>
+                <div class="filter-item" data-subject="biology">生物</div>
+                <div class="filter-item" data-subject="history">历史</div>
+                <div class="filter-item" data-subject="geography">地理</div>
+                <div class="filter-item" data-subject="politics">政治</div>
             </div>
             <button class="btn btn-primary btn-block" id="btn-export-pdf" style="margin-bottom: 12px;">
                 导出PDF
