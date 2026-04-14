@@ -494,7 +494,9 @@
             </div>
         </div>
 
-        <h3 style="margin-bottom: 12px; font-size: 16px;">最近错题</h3>
+        <button onclick="showWeakPointsReport()" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #ff4d4f, #ff7875); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          📊 查看薄弱知识点分析
+        </button>        <h3 style="margin-bottom: 12px; font-size: 16px;">最近错题</h3>
         <div id="recent-errors">
             <div class="empty-state">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -592,6 +594,23 @@
             <div class="form-group">
                 <label class="form-label">正确答案</label>
                 <textarea class="form-textarea" id="answer" placeholder="写下正确答案和解析..."></textarea>
+                <div style="margin-top: 12px;">
+                    <label class="form-label" style="font-size: 14px; color: #666;">答案图片（可选）</label>
+                    <div id="answer-image-preview-area">
+                        <div class="image-upload" id="answer-image-upload" style="padding: 20px;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="#999" style="margin-bottom: 8px;">
+                                <path d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
+                            </svg>
+                            <p style="color: #999; font-size: 13px; margin-bottom: 10px;">选择图片来源</p>
+                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                <button type="button" id="btn-answer-camera" style="padding: 6px 12px; background: #4A90D9; color: white; border: none; border-radius: 4px; font-size: 13px;">📷 拍照</button>
+                                <button type="button" id="btn-answer-gallery" style="padding: 6px 12px; background: #f5f5f5; color: #333; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">🖼️ 相册</button>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" accept="image/*" capture="environment" id="answer-camera-input" style="display: none;">
+                    <input type="file" accept="image/*" id="answer-gallery-input" style="display: none;">
+                </div>
             </div>
 
             <button class="btn btn-primary btn-block" id="btn-save">保存错题</button>
